@@ -271,7 +271,7 @@
   <section class="scene" data-i="5">
     <div class="lamp" id="lamp"></div>
     <div class="layer bl"></div>
-    <div class="line warm late" id="s6a" style="top:38%;">那束光曾经亮过</div>
+    <div class="line warm late" id="s6a" style="top:38%;">只要心中仍有光</div>
     <div class="line warm late" id="s6b" style="top:62%;z-index:21;">不必因为梦容易消散，就不敢拥有它</div>
   </section>
 
@@ -280,6 +280,12 @@
 
 <div class="dots" id="dots"></div>
 <div class="hint" id="hint">空格 / → 继续　·　1–6 跳转　·　F 全屏　·　R 重播本屏</div>
+
+<!-- BGM：同目录下的 bgm 音频；浏览器要求先有一次点击或按键才允许出声 -->
+<audio id="bgm" loop preload="auto">
+  <source src="bgm.m4a" type="audio/mp4">
+  <source src="bgm.mp3" type="audio/mpeg">
+</audio>
 
 <script>
 (function(){
@@ -812,6 +818,30 @@
       (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
     }
   }
+
+  // ---------- BGM：第一次点击或按键之后才起，音量淡入 ----------
+  var bgm = document.getElementById('bgm');
+  var bgmStarted = false, bgmDead = false;
+  function startBgm(){
+    if (bgmStarted || bgmDead || !bgm) return;
+    bgmStarted = true;
+    bgm.volume = 0;
+    var p = bgm.play();
+    if (!p || !p.then){ bgm.volume = 0.34; return; }
+    p.then(function(){
+      var t0 = Date.now();
+      var fade = setInterval(function(){
+        var k = Math.min(1, (Date.now() - t0) / 2400);
+        bgm.volume = 0.34 * k;
+        if (k >= 1) clearInterval(fade);
+      }, 80);
+    }).catch(function(){
+      bgmStarted = false;
+      bgmDead = true;   // 没有音频文件就静默跳过，不影响翻页
+    });
+  }
+  document.addEventListener('pointerdown', startBgm, true);
+  document.addEventListener('keydown', startBgm, true);
 
   document.addEventListener('keydown', function(e){
     var k = e.key;
